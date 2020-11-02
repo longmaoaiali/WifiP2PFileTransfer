@@ -10,11 +10,12 @@ import com.cvte.wifip2pfiletransfer.Base.BaseActivity;
  */
 
 public class SendFileActivity extends BaseActivity {
+    public static final String TAG = "SendFileActivity";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setContentView(R.layout.activity_sendfile);
 
     }
 }
