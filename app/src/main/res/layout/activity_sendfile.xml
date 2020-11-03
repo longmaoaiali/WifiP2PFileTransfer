@@ -33,6 +33,7 @@
 
 
     <TextView
+        android:id="@+id/tv_deviceInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
@@ -78,6 +79,7 @@
         tools:text="连接状态" />
 
     <TextView
+        android:id="@+id/tv_deviceList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
