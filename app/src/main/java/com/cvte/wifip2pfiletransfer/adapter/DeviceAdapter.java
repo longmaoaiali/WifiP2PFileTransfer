@@ -45,6 +45,11 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         return mWifiP2pDeviceList.size();
     }
 
+    public void setData(List<WifiP2pDevice> wifiP2pDeviceList) {
+        this.mWifiP2pDeviceList = wifiP2pDeviceList;
+        notifyDataSetChanged();
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         private final TextView mTv_deviceName;

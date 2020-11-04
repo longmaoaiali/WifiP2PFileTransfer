@@ -23,7 +23,7 @@ public class LoadingDialog extends Dialog {
         super(context, R.style.LoadingDialogTheme);
         setContentView(R.layout.dialog_loading);
         mIvLoading = findViewById(R.id.tv_loading);
-        mTvHint = findViewById(R.id.hint);
+        mTvHint = findViewById(R.id.tv_loadinghint);
         mAnimation = AnimationUtils.loadAnimation(context, R.anim.loading_dialog);
     }
 

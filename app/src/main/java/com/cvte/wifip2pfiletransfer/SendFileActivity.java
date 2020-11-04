@@ -14,14 +14,20 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.cvte.wifip2pfiletransfer.Base.BaseActivity;
+import com.cvte.wifip2pfiletransfer.adapter.DeviceAdapter;
+import com.cvte.wifip2pfiletransfer.broadcast.DirectBroadcastReceiver;
 import com.cvte.wifip2pfiletransfer.callback.DirectActionListener;
 import com.cvte.wifip2pfiletransfer.view.LoadingDialog;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -49,11 +55,14 @@ public class SendFileActivity extends BaseActivity {
      */
     private WifiP2pManager.Channel mChannel;
     private WifiP2pInfo mWifiP2pInfo;
+    private boolean mWifiP2pEnable = false;
+
 
     private DirectActionListener mDirectActionListener = new DirectActionListener() {
-        @Override
-        public void wifiP2pEnabled(boolean enabled) {
 
+        @Override
+        public void setWifiP2pEnabled(boolean enabled) {
+            mWifiP2pEnable = enabled;
         }
 
         @Override
@@ -73,7 +82,11 @@ public class SendFileActivity extends BaseActivity {
 
         @Override
         public void onPeersAvailable(Collection<WifiP2pDevice> wifiP2pDeviceList) {
-
+            Log.d(TAG,"inner class DirectActionListener method onPeersAvailable ");
+            SendFileActivity.this.mWifiP2pDeviceList.clear();
+            SendFileActivity.this.mWifiP2pDeviceList.addAll(wifiP2pDeviceList);
+            mDeviceAdapter.setData(SendFileActivity.this.mWifiP2pDeviceList);
+            mLoadingDialog.cancel();
         }
 
         @Override
@@ -81,6 +94,8 @@ public class SendFileActivity extends BaseActivity {
 
         }
     };
+    private List<WifiP2pDevice> mWifiP2pDeviceList = new ArrayList<>();
+    private DeviceAdapter mDeviceAdapter;
 
 
     @Override
@@ -100,8 +115,8 @@ public class SendFileActivity extends BaseActivity {
         }
 
         mChannel = mWifiP2pManager.initialize(this,getMainLooper(),mDirectActionListener);
-
-
+        DirectBroadcastReceiver directBroadcastReceiver = new DirectBroadcastReceiver(mWifiP2pManager,mChannel,mDirectActionListener);
+        registerReceiver(directBroadcastReceiver,directBroadcastReceiver.getIntentFilter());
     }
 
     private void initViewListner() {
@@ -142,7 +157,9 @@ public class SendFileActivity extends BaseActivity {
 
         mLoadingDialog = new LoadingDialog(this);
 
-
+        mDeviceAdapter = new DeviceAdapter();
+        mRv_deviceList.setLayoutManager(new LinearLayoutManager(this));
+        mRv_deviceList.setAdapter(mDeviceAdapter);
     }
 
     /*创建好顶部的菜单*/
@@ -167,10 +184,37 @@ public class SendFileActivity extends BaseActivity {
             }
 
             case R.id.menuDirectDiscover:{
+                if (!mWifiP2pEnable) {
+                    showToast("请打开wifi开关");
+                    return true;
+                }
+                mLoadingDialog.show("正在搜索附近的设备",true,false);
+                mWifiP2pDeviceList.clear();
+                //先清空列表
+                mDeviceAdapter.setData(mWifiP2pDeviceList);
+                mWifiP2pManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
+                    @Override
+                    public void onSuccess() {
+                        /*搜索成功会有广播,在广播接收者回调显示recyclerListView*/
+                        showToast("搜索成功");
+                    }
 
+                    @Override
+                    public void onFailure(int reason) {
+                        showToast("搜索失败");
+                        Log.d(TAG,"reason code is "+reason);
+                        mLoadingDialog.cancel();
+                    }
+                });
+                return true;
             }
+            default:
+                return true;
 
         }
-        return super.onOptionsItemSelected(item);
     }
+
+
+
+
 }

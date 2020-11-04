@@ -12,7 +12,7 @@ import java.util.Collection;
 
 public interface DirectActionListener extends WifiP2pManager.ChannelListener {
 
-    void wifiP2pEnabled(boolean enabled);
+    void setWifiP2pEnabled(boolean enabled);
 
     void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo);
 

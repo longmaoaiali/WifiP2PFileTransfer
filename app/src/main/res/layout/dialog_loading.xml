@@ -17,7 +17,7 @@
         android:src="@mipmap/loading"/>
 
     <TextView
-        android:id="@+id/tv_hint"
+        android:id="@+id/tv_loadinghint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/colorWhite"
