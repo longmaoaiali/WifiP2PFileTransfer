@@ -3,6 +3,7 @@ package com.cvte.wifip2pfiletransfer;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.cvte.wifip2pfiletransfer.Base.BaseActivity;
+import com.cvte.wifip2pfiletransfer.broadcast.DirectBroadcastReceiver;
 
 
 public class MainActivity extends BaseActivity {
@@ -28,7 +30,10 @@ public class MainActivity extends BaseActivity {
 
         initView();
         initViewListener();
+
     }
+
+
 
     private void initViewListener() {
         mCheckPermissionBT.setOnClickListener(new View.OnClickListener() {

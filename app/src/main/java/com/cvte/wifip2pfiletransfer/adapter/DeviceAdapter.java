@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder> {
 
     private List<WifiP2pDevice> mWifiP2pDeviceList = new ArrayList<>();
+    private OnItemClickListener mOnItemClickListener = null;
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -32,12 +33,19 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, final int position) {
         holder.mTv_deviceName.setText(mWifiP2pDeviceList.get(position).deviceName);
         holder.mTv_deviceAddress.setText(mWifiP2pDeviceList.get(position).deviceAddress);
         /** Device connection status */
         holder.mTv_deviceDetails.setText(MainActivity.getDeviceStatus(mWifiP2pDeviceList.get(position).status));
-
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mOnItemClickListener != null) {
+                    mOnItemClickListener.onItemClick(mWifiP2pDeviceList.get(position));
+                }
+            }
+        });
     }
 
     @Override
@@ -63,5 +71,13 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
             mTv_deviceDetails = itemView.findViewById(R.id.tv_deviceDetails);
         }
 
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener){
+        this.mOnItemClickListener = listener;
+    }
+
+    public interface OnItemClickListener{
+        void onItemClick(WifiP2pDevice wifiP2pDevice);
     }
 }

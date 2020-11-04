@@ -96,18 +96,21 @@ public class SendFileActivity extends BaseActivity {
     };
     private List<WifiP2pDevice> mWifiP2pDeviceList = new ArrayList<>();
     private DeviceAdapter mDeviceAdapter;
+    private WifiP2pDevice mWifiP2pDevice;
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sendfile);
+
+        initP2PEvent();
         initView();
         initViewListner();
-        initP2PEvent();
+
     }
 
-    private void initP2PEvent() {
+    public void initP2PEvent() {
         mWifiP2pManager = (WifiP2pManager) getSystemService(WIFI_P2P_SERVICE);
         if (mWifiP2pManager == null) {
             finish();
@@ -117,9 +120,29 @@ public class SendFileActivity extends BaseActivity {
         mChannel = mWifiP2pManager.initialize(this,getMainLooper(),mDirectActionListener);
         DirectBroadcastReceiver directBroadcastReceiver = new DirectBroadcastReceiver(mWifiP2pManager,mChannel,mDirectActionListener);
         registerReceiver(directBroadcastReceiver,directBroadcastReceiver.getIntentFilter());
+
+        //startP2PDiscovery();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //startP2PDiscovery();
+
+    }
+
+
     private void initViewListner() {
+
+        mDeviceAdapter.setOnItemClickListener(new DeviceAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(WifiP2pDevice wifiP2pDevice) {
+                mWifiP2pDevice = wifiP2pDevice;
+                showToast(wifiP2pDevice.deviceName);
+                connect();
+            }
+        });
+
         mBtn_disconnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -133,6 +156,11 @@ public class SendFileActivity extends BaseActivity {
                 navToChose();
             }
         });
+    }
+
+    /*根据mWifiP2pDevice 发起连接*/
+    private void connect() {
+        showToast("连接 "+mWifiP2pDevice.deviceName+" ing ");
     }
 
     private void navToChose() {
@@ -184,28 +212,7 @@ public class SendFileActivity extends BaseActivity {
             }
 
             case R.id.menuDirectDiscover:{
-                if (!mWifiP2pEnable) {
-                    showToast("请打开wifi开关");
-                    return true;
-                }
-                mLoadingDialog.show("正在搜索附近的设备",true,false);
-                mWifiP2pDeviceList.clear();
-                //先清空列表
-                mDeviceAdapter.setData(mWifiP2pDeviceList);
-                mWifiP2pManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-                        /*搜索成功会有广播,在广播接收者回调显示recyclerListView*/
-                        showToast("搜索成功");
-                    }
-
-                    @Override
-                    public void onFailure(int reason) {
-                        showToast("搜索失败");
-                        Log.d(TAG,"reason code is "+reason);
-                        mLoadingDialog.cancel();
-                    }
-                });
+                startP2PDiscovery();
                 return true;
             }
             default:
@@ -214,7 +221,30 @@ public class SendFileActivity extends BaseActivity {
         }
     }
 
+    private void startP2PDiscovery() {
+        if (!mWifiP2pEnable) {
+            showToast("请打开wifi开关");
+            return;
+        }
+        mLoadingDialog.show("正在搜索附近的设备",true,false);
+        mWifiP2pDeviceList.clear();
+        //先清空列表
+        mDeviceAdapter.setData(mWifiP2pDeviceList);
+        mWifiP2pManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                /*搜索成功会有广播,在广播接收者回调显示recyclerListView*/
+                showToast("搜索成功");
+            }
 
+            @Override
+            public void onFailure(int reason) {
+                showToast("搜索失败");
+                Log.d(TAG,"reason code is "+reason);
+                mLoadingDialog.cancel();
+            }
+        });
+    }
 
 
 }
