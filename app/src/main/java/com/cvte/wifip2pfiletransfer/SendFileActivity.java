@@ -174,6 +174,8 @@ public class SendFileActivity extends BaseActivity {
         setTitle("发送文件");
         mBtn_disconnect = this.findViewById(R.id.btn_disconnect);
         mBtn_chooseFile = this.findViewById(R.id.btn_chooseFile);
+        mBtn_disconnect.setEnabled(false);
+        mBtn_chooseFile.setEnabled(false);
         mTv_deviceInfo = this.findViewById(R.id.tv_deviceInfo);
         mTv_deviceName = this.findViewById(R.id.tv_deviceName);
         mTv_deviceAddress = this.findViewById(R.id.tv_deviceAddress);
