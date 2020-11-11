@@ -71,7 +71,7 @@ public class DirectBroadcastReceiver extends BroadcastReceiver {
     }
 
 
-    public IntentFilter getIntentFilter() {
+    public static IntentFilter getIntentFilter() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
