@@ -1,6 +1,7 @@
 package com.cvte.wifip2pfiletransfer;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -21,8 +22,14 @@ import com.cvte.wifip2pfiletransfer.Base.BaseActivity;
 import com.cvte.wifip2pfiletransfer.adapter.DeviceAdapter;
 import com.cvte.wifip2pfiletransfer.broadcast.DirectBroadcastReceiver;
 import com.cvte.wifip2pfiletransfer.callback.DirectActionListener;
+import com.cvte.wifip2pfiletransfer.common.Glide4Engine;
+import com.cvte.wifip2pfiletransfer.model.FileTransfer;
 import com.cvte.wifip2pfiletransfer.view.LoadingDialog;
+import com.zhihu.matisse.Matisse;
+import com.zhihu.matisse.MimeType;
+import com.zhihu.matisse.internal.entity.CaptureStrategy;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -56,6 +63,7 @@ public class SendFileActivity extends BaseActivity {
     private WifiP2pManager.Channel mChannel;
     private WifiP2pInfo mWifiP2pInfo;
     private boolean mWifiP2pEnable = false;
+    private static final int CODE_CHOOSE_FILE = 100;
 
 
     private DirectActionListener mDirectActionListener = new DirectActionListener() {
@@ -163,8 +171,42 @@ public class SendFileActivity extends BaseActivity {
         showToast("连接 "+mWifiP2pDevice.deviceName+" ing ");
     }
 
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == CODE_CHOOSE_FILE && resultCode == RESULT_OK) {
+            List<String> strings = Matisse.obtainPathResult(data);
+            if (strings != null && !strings.isEmpty()) {
+                String path = strings.get(0);
+                Log.e(TAG,"文件路径:"+path);
+                File file = new File(path);
+                if (file.exists() && mWifiP2pInfo!= null) {
+                    FileTransfer fileTransfer = new FileTransfer(file.getPath(),file.length());
+                    //TODO:开始文件传输
+                }
+            }
+        }
+    }
+
     private void navToChose() {
         Log.d(TAG,"choose File");
+        /*Matisse 图片 视频文件选择框架*/
+        /*Matisse is a well-designed local image and video selector for Android*/
+        /*github : https://github.com/zhihu/Matisse*/
+        /* 选择结果会回调 onActivityResult()*/
+        Matisse.from(this)
+                .choose(MimeType.ofImage())
+                .countable(true)
+                .showSingleMediaType(true)
+                .maxSelectable(1)
+                .capture(false)
+                .captureStrategy(new CaptureStrategy(true, BuildConfig.APPLICATION_ID + ".fileprovider"))
+                .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
+                .thumbnailScale(0.70f)
+                .imageEngine(new Glide4Engine())
+                .forResult(CODE_CHOOSE_FILE);
+
     }
 
     private void disconnect() {
