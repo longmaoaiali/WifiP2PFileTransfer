@@ -35,6 +35,10 @@ public class WifiServerService extends IntentService {
     private OnProgressChangListener mOnProgressChangListener = null;
 
 
+    public WifiServerService(){
+        super("WifiServerService");
+    }
+
     /*Binder*/
     public class MyBinder extends Binder {
         public WifiServerService getService() {
@@ -71,7 +75,7 @@ public class WifiServerService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-
+        Log.d(TAG,"FileService IntentService onHandleIntent");
         File file = null;
         try {
             //socket网络编程

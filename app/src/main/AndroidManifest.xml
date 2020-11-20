@@ -29,6 +29,8 @@
         <activity android:name=".SendFileActivity"/>
         <activity android:name=".ReceiveFileActivity"/>
 
+        <service android:name=".service.WifiServerService"/>
+
     </application>
 
 </manifest>

@@ -28,7 +28,7 @@ public class BaseActivity extends AppCompatActivity {
 
 
     protected void showLoadingDialog(String message){
-        if (mLoadingDialog != null) {
+        if (mLoadingDialog == null) {
             mLoadingDialog = new LoadingDialog(this);
         }
         mLoadingDialog.show(message,true,false);

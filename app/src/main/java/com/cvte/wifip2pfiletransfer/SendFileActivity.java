@@ -3,6 +3,8 @@ package com.cvte.wifip2pfiletransfer;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WpsInfo;
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -24,6 +26,7 @@ import com.cvte.wifip2pfiletransfer.broadcast.DirectBroadcastReceiver;
 import com.cvte.wifip2pfiletransfer.callback.DirectActionListener;
 import com.cvte.wifip2pfiletransfer.common.Glide4Engine;
 import com.cvte.wifip2pfiletransfer.model.FileTransfer;
+import com.cvte.wifip2pfiletransfer.service.WifiClientTask;
 import com.cvte.wifip2pfiletransfer.view.LoadingDialog;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
@@ -75,17 +78,60 @@ public class SendFileActivity extends BaseActivity {
 
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+            dismissLoadingDialog();
+            mWifiP2pDeviceList.clear();
+            mDeviceAdapter.setData(mWifiP2pDeviceList);
+            mBtn_chooseFile.setEnabled(true);
+            mBtn_disconnect.setEnabled(true);
+            //是否成功创建群组
+            Log.d(TAG,"onConnectionInfoAvailable groupFormed-->" + wifiP2pInfo.groupFormed);
+            Log.d(TAG,"onConnectionInfoAvailable isGroupOwner-->" + wifiP2pInfo.isGroupOwner);
+            Log.d(TAG,"onConnectionInfoAvailable groupOwnerAddress-->" + wifiP2pInfo.groupOwnerAddress.getHostAddress());
+            StringBuilder stringBuilder = new StringBuilder();
+            if (mWifiP2pDevice != null) {
+                stringBuilder.append("连接的设备名：");
+                stringBuilder.append(mWifiP2pDevice.deviceName);
+                stringBuilder.append("\n");
+                stringBuilder.append("连接的设备的地址：");
+                stringBuilder.append(mWifiP2pDevice.deviceAddress);
+            }
+            stringBuilder.append("\n");
+            stringBuilder.append("是否群主：");
+            stringBuilder.append(wifiP2pInfo.isGroupOwner ? "是群主" : "非群主");
+            stringBuilder.append("\n");
+            stringBuilder.append("群主IP地址：");
+            stringBuilder.append(wifiP2pInfo.groupOwnerAddress.getHostAddress());
+            //todo:
+            mTv_status.setText(stringBuilder);
+            if (wifiP2pInfo.groupFormed && !wifiP2pInfo.isGroupOwner) {
+                SendFileActivity.this.mWifiP2pInfo = wifiP2pInfo;
+            }
 
         }
 
         @Override
         public void onDisconnection() {
+            Log.e(TAG,"onDisconnection callback");
+            mBtn_disconnect.setEnabled(false);
+            mBtn_chooseFile.setEnabled(false);
 
+            showToast("处于非连接中");
+            mWifiP2pDeviceList.clear();
+            mDeviceAdapter.setData(mWifiP2pDeviceList);
+            mTv_status.setText(null);
+            SendFileActivity.this.mWifiP2pInfo = null;
         }
 
         @Override
         public void onSelfDeviceAvailable(WifiP2pDevice wifiP2pDevice) {
+            Log.e(TAG, "onSelfDeviceAvailable callback");
+            Log.e(TAG, "DeviceName: " + wifiP2pDevice.deviceName);
+            Log.e(TAG, "DeviceAddress: " + wifiP2pDevice.deviceAddress);
+            Log.e(TAG, "Status: " + wifiP2pDevice.status);
 
+            mTv_deviceName.setText(wifiP2pDevice.deviceName);
+            mTv_deviceAddress.setText(wifiP2pDevice.deviceAddress);
+            mTv_deviceStatus.setText(MainActivity.getDeviceStatus(wifiP2pDevice.status));
         }
 
         @Override
@@ -99,7 +145,7 @@ public class SendFileActivity extends BaseActivity {
 
         @Override
         public void onChannelDisconnected() {
-
+            Log.d(TAG,"onChannelDisconnected-->");
         }
     };
     private List<WifiP2pDevice> mWifiP2pDeviceList = new ArrayList<>();
@@ -169,6 +215,29 @@ public class SendFileActivity extends BaseActivity {
     /*根据mWifiP2pDevice 发起连接*/
     private void connect() {
         showToast("连接 "+mWifiP2pDevice.deviceName+" ing ");
+        //todo:发起连接
+        WifiP2pConfig p2pConfig = new WifiP2pConfig();
+        if (p2pConfig.deviceAddress != null && mWifiP2pDevice != null) {
+            p2pConfig.deviceAddress = mWifiP2pDevice.deviceAddress;
+            //PBC WIFI protected setup with PBC push-button configure method
+            //WIFI 直连中 group owner实现数据加密
+            p2pConfig.wps.setup = WpsInfo.PBC;
+            showLoadingDialog("正在连接"+mWifiP2pDevice.deviceName);
+            mWifiP2pManager.connect(mChannel, p2pConfig, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    Log.d(TAG,"connect success");
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                    showToast("连接失败"+reason);
+                    dismissLoadingDialog();
+                }
+            });
+        }
+
+
     }
 
 
@@ -184,6 +253,8 @@ public class SendFileActivity extends BaseActivity {
                 if (file.exists() && mWifiP2pInfo!= null) {
                     FileTransfer fileTransfer = new FileTransfer(file.getPath(),file.length());
                     //TODO:开始文件传输
+                    /*execute 传入groupowner 的IP地址*/
+                    new WifiClientTask(this,fileTransfer).execute(mWifiP2pInfo.groupOwnerAddress.getHostAddress());
                 }
             }
         }

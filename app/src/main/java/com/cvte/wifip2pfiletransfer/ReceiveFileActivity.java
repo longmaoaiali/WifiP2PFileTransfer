@@ -46,6 +46,7 @@ public class ReceiveFileActivity extends BaseActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             //todo:成功绑定文件传输的服务
+            Log.d(TAG,"onServiceConnected mWifiServerService = binder.getService();");
             WifiServerService.MyBinder binder = (WifiServerService.MyBinder) service;
             mWifiServerService = binder.getService();
             mWifiServerService.setOnProgressChangListener(new WifiServerService.OnProgressChangListener() {
@@ -100,10 +101,15 @@ public class ReceiveFileActivity extends BaseActivity {
             log("onConnectionInfoAvailable");
             log("isGroupOwner：" + wifiP2pInfo.isGroupOwner);
             log("groupFormed：" + wifiP2pInfo.groupFormed);
+
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 mConnectionInfoAvailable = true;
+
                 if (mWifiServerService != null) {
+                    Log.d(TAG,"startService");
                     startService(WifiServerService.class);
+                } else {
+                    Log.d(TAG,"startService no action ,mWifiServerService is null");
                 }
             }
         }
@@ -203,6 +209,7 @@ public class ReceiveFileActivity extends BaseActivity {
     }
 
     private void bindService() {
+        Log.d(TAG,"bindService bind fileTransfer service");
         Intent intent = new Intent(ReceiveFileActivity.this,WifiServerService.class);
         bindService(intent,mServiceConnection,BIND_AUTO_CREATE);
     }
